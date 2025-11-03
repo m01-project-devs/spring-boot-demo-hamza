@@ -1,8 +1,8 @@
-package com.m01project.taskmanager;
+package com.m01project.taskmanager.service;
 
-import com.m01project.taskmanager.demo.service.HelloWorldService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HelloWorldServiceTest {
@@ -25,11 +25,12 @@ public class HelloWorldServiceTest {
         String result = service.sayHelloTo("hamza");
         assertEquals("hello hamza", result);
     }
+
     @Test
     void sayHelloToToylyTest() {
         String result = service.sayHelloTo("Toyly");
         assertEquals("hello Toyly", result);
-    }    
+    }
 
     @Test
     void sayHelloToAbdullahWithBlanksTest() {
@@ -54,5 +55,5 @@ public class HelloWorldServiceTest {
         String result = service.sayHelloTo("Shermatov");
         assertEquals("hello Shermatov", result);
     }
-
 }
+
