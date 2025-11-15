@@ -22,10 +22,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUser(@PathVariable long id) {
-        return userService.getUserById(id)
-                .map(user -> new UserResponseDto(user.getId(), user.getEmail(), user.getPhone()))
+    @GetMapping("/{email}")
+    public ResponseEntity<UserResponseDto> getUser(@PathVariable String email) {
+        return userService.getUserByEmail(email)
+                .map(user -> new UserResponseDto(user.getEmail(), user.getPhone()))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

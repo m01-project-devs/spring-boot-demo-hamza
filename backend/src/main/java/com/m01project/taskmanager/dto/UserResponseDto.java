@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UserResponseDto {
-    private long id;
     private String email;
     private String phone;
 }
