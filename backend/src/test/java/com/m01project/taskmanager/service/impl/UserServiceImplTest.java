@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -38,9 +39,12 @@ class UserServiceImplTest {
     @Test
     void testGetUserByEmail() {
         User user = new User(1L, "user1@test.de", "user1", "1111", null);
-        when(userRepository.getUserByEmail("user1@test.de")).thenReturn(user);
+        when(userRepository.getUserByEmail("user1@test.de")).thenReturn(Optional.of(user));
 
-        User fetched = userService.getUserByEmail("user1@test.de");
+        Optional<User> fetchedOpt = userService.getUserByEmail("user1@test.de");
+        assertTrue(fetchedOpt.isPresent());
+        User fetched = fetchedOpt.get();
+
         assertNotNull(fetched);
         assertEquals("user1@test.de", fetched.getEmail());
     }
