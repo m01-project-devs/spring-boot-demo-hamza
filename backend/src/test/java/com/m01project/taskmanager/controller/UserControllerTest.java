@@ -109,4 +109,20 @@ class UserControllerMvcTest {
         mockMvc.perform(delete("/api/users/notfound@example.com"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void invalidEmailReturns400() throws Exception {
+        String json = """
+                {
+                    "email": "wrongemail",
+                    "password": "password123",
+                    "phone": "+905555555555"
+                }
+                """;
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
 }

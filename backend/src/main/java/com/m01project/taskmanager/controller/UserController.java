@@ -5,6 +5,7 @@ import com.m01project.taskmanager.dto.UserResponseDto;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.repository.UserRepository;
 import com.m01project.taskmanager.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto request) {
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request) {
 
         User saved = userService.createUser(request);
         UserResponseDto response = new UserResponseDto(saved.getEmail(), saved.getPhone());
