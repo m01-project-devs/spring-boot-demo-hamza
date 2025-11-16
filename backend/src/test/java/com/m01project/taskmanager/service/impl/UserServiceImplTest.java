@@ -1,5 +1,6 @@
 package com.m01project.taskmanager.service.impl;
 
+import com.m01project.taskmanager.dto.UserRequestDto;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.repository.UserRepository;
 import com.m01project.taskmanager.service.UserService;
@@ -27,13 +28,22 @@ class UserServiceImplTest {
 
     @Test
     void createUser() {
-        User user = new User(1L, "user1@test.de", "user1", "1111", null);
-        when(userRepository.save(user)).thenReturn(new User(1L, "user1@test.de", "user1", "1111", null));
+        UserRequestDto request = new UserRequestDto("user1@test.de", "1111", "user1");
 
-        User created = userService.createUser(user);
+        User savedUser = new User();
+        savedUser.setId(1L);
+        savedUser.setEmail("user1@test.de");
+        savedUser.setPhone("1111");
+        savedUser.setPassword("user1");
+
+        when(userRepository.save(Mockito.any(User.class))).thenReturn(savedUser);
+
+        User created = userService.createUser(request);
+
         assertNotNull(created);
         assertEquals(1L, created.getId());
         assertEquals("user1@test.de", created.getEmail());
+        assertEquals("1111", created.getPhone());
     }
 
     @Test

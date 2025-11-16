@@ -31,40 +31,31 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto request) {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setPassword(request.getPassword());
 
-        User saved = userService.createUser(user);
-        UserResponseDto response = new UserResponseDto(saved.getId(), saved.getEmail(), saved.getPhone());
+        User saved = userService.createUser(request);
+        UserResponseDto response = new UserResponseDto(saved.getEmail(), saved.getPhone());
         return ResponseEntity.created(URI.create("/api/users/" + saved.getId())).body(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @RequestBody UserRequestDto request) {
-        Optional<User> existing = userService.getUserById(id);
+    @PutMapping("/{email}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable String email, @RequestBody UserRequestDto request) {
+        Optional<User> existing = userService.getUserByEmail(email);
         if(existing.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        User user = existing.get();
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setPhone(request.getPhone());
-        User updated = userService.createUser(user);
 
-        UserResponseDto response = new UserResponseDto(updated.getId(), updated.getEmail(), updated.getPhone());
+        User updated = userService.createUser(request);
+
+        UserResponseDto response = new UserResponseDto(updated.getEmail(), updated.getPhone());
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponseDto> deleteUser(@PathVariable long id) {
-        Optional<User> user = userService.getUserById(id);
-        if(user.isEmpty()) {
+    @DeleteMapping("/{email}")
+    public ResponseEntity<UserResponseDto> deleteUser(@PathVariable String email) {
+        boolean deleted = userService.deleteUser(email);
+        if(!deleted) {
             return ResponseEntity.notFound().build();
         }
-
-        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 }

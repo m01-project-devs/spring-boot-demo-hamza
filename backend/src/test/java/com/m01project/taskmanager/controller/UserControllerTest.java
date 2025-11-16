@@ -1,62 +1,112 @@
 package com.m01project.taskmanager.controller;
 
+import com.m01project.taskmanager.dto.UserRequestDto;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class UserControllerMvcTest {
 
-import java.time.LocalDateTime;
-
-class UserControllerTest {
-
+    @Autowired
     private MockMvc mockMvc;
-    private UserService userService;   // mocked
 
-    @BeforeEach
-    void setup() {
-        userService = Mockito.mock(UserService.class);
-        UserController userController = new UserController(userService);
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(userController)
-                .build();
-    }
+    @MockitoBean
+    private UserService userService;
 
     @Test
-    void shouldReturnUser_WhenExists() throws Exception {
-
-        // test user
+    void testGetUser_UserExists() throws Exception {
         User user = new User();
-        user.setId(1L);
-        user.setEmail("test@gmail.com");
-        user.setPassword("1111");
-        user.setPhone("55555");
-        user.setCreatedAt(LocalDateTime.now());
+        user.setEmail("test@example.com");
+        user.setPhone("1234567890");
 
-        Mockito.when(userService.getUserById(1L))
-                .thenReturn(Optional.of(user));
+        when(userService.getUserByEmail("test@example.com")).thenReturn(Optional.of(user));
 
-        mockMvc.perform(get("/api/users/1"))
+        mockMvc.perform(get("/api/users/test@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("test@gmail.com"))
-                .andExpect(jsonPath("$.phone").value("55555"));
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.phone").value("1234567890"));
     }
 
     @Test
-    void shouldReturn404_WhenUserNotFound() throws Exception {
-        Mockito.when(userService.getUserById(999L))
-                .thenReturn(Optional.empty());
+    void testGetUser_UserNotFound() throws Exception {
+        when(userService.getUserByEmail("notfound@example.com")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/users/999"))
+        mockMvc.perform(get("/api/users/notfound@example.com"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateUser() throws Exception {
+        UserRequestDto request = new UserRequestDto();
+        request.setEmail("new@example.com");
+        request.setPhone("1112223333");
+
+        User savedUser = new User();
+        savedUser.setId(1L);
+        savedUser.setEmail("new@example.com");
+        savedUser.setPhone("1112223333");
+
+        when(userService.createUser(any(UserRequestDto.class))).thenReturn(savedUser);
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/users/1"))
+                .andExpect(jsonPath("$.email").value("new@example.com"));
+    }
+
+    @Test
+    void testUpdateUser_UserExists() throws Exception {
+        UserRequestDto request = new UserRequestDto();
+        request.setEmail("update@example.com");
+        request.setPhone("999888777");
+
+        User existingUser = new User();
+        existingUser.setEmail("update@example.com");
+        existingUser.setPhone("111222333");
+
+        when(userService.getUserByEmail("update@example.com")).thenReturn(Optional.of(existingUser));
+        when(userService.createUser(any(UserRequestDto.class))).thenReturn(existingUser);
+
+        mockMvc.perform(put("/api/users/update@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("update@example.com"));
+    }
+
+    @Test
+    void testDeleteUser_UserExists() throws Exception {
+        when(userService.deleteUser("delete@example.com")).thenReturn(true);
+
+        mockMvc.perform(delete("/api/users/delete@example.com"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteUser_UserNotFound() throws Exception {
+        when(userService.deleteUser("notfound@example.com")).thenReturn(false);
+
+        mockMvc.perform(delete("/api/users/notfound@example.com"))
                 .andExpect(status().isNotFound());
     }
 }
