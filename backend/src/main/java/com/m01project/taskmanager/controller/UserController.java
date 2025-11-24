@@ -3,17 +3,17 @@ package com.m01project.taskmanager.controller;
 import com.m01project.taskmanager.dto.UserRequestDto;
 import com.m01project.taskmanager.dto.UserResponseDto;
 import com.m01project.taskmanager.model.User;
-import com.m01project.taskmanager.repository.UserRepository;
 import com.m01project.taskmanager.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@Validated
 public class UserController {
     
     private final UserService userService;
@@ -23,7 +23,7 @@ public class UserController {
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<UserResponseDto> getUser(@PathVariable String email) {
+    public ResponseEntity<UserResponseDto> getUser(@PathVariable @Email @NotBlank String email) {
         return userService.getUserByEmail(email)
                 .map(user -> new UserResponseDto(user.getEmail(), user.getPhone()))
                 .map(ResponseEntity::ok)
@@ -32,31 +32,30 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request) {
-
         User saved = userService.createUser(request);
-        UserResponseDto response = new UserResponseDto(saved.getEmail(), saved.getPhone());
-        return ResponseEntity.created(URI.create("/api/users/" + saved.getId())).body(response);
+        UserResponseDto response = getResponse(saved);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{email}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable String email, @RequestBody UserRequestDto request) {
-        Optional<User> existing = userService.getUserByEmail(email);
-        if(existing.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        User updated = userService.createUser(request);
-
-        UserResponseDto response = new UserResponseDto(updated.getEmail(), updated.getPhone());
+    public ResponseEntity<UserResponseDto> updateUser
+            (@PathVariable @Email @NotBlank String email,
+             @Valid @RequestBody UserRequestDto request) {
+        User updated = userService.updateUser(request);
+        UserResponseDto response = getResponse(updated);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{email}")
-    public ResponseEntity<UserResponseDto> deleteUser(@PathVariable String email) {
+    public ResponseEntity<Void> deleteUser(@PathVariable @Email @NotBlank String email) {
         boolean deleted = userService.deleteUser(email);
         if(!deleted) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    private UserResponseDto getResponse(User user) {
+        return new UserResponseDto(user.getEmail(), user.getPhone());
     }
 }
