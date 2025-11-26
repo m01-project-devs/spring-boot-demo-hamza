@@ -1,6 +1,8 @@
 package com.m01project.taskmanager.service.impl;
 
 import com.m01project.taskmanager.dto.UserRequestDto;
+import com.m01project.taskmanager.exception.ResourceNotFoundException;
+import com.m01project.taskmanager.exception.UserAlreadyExistsException;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -50,7 +52,7 @@ class UserServiceImplTest {
     void createUser_WhenEmailAlreadyExists_ShouldThrowException() {
         UserRequestDto request = new UserRequestDto("user1@test.com", "1111", "");
         when(userRepository.existsByEmail("user1@test.com")).thenReturn(true);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.createUser(request));
         assertEquals("this user is already in db with email: user1@test.com",
                 exception.getMessage());
@@ -78,7 +80,7 @@ class UserServiceImplTest {
     void updateUser_WhenUserDoNotExist_ShouldThrowException() {
         UserRequestDto request = new UserRequestDto("user1@test.com", "11111111", "22222222");
         when(userRepository.getUserByEmail("user1@test.com")).thenReturn(Optional.empty());
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> userService.updateUser(request));
         assertEquals("User can not be found for email: user1@test.com",
                 exception.getMessage());

@@ -1,14 +1,13 @@
 package com.m01project.taskmanager.service.impl;
 
 import com.m01project.taskmanager.dto.UserRequestDto;
+import com.m01project.taskmanager.exception.ResourceNotFoundException;
+import com.m01project.taskmanager.exception.UserAlreadyExistsException;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.repository.UserRepository;
 import com.m01project.taskmanager.service.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import javax.naming.NameNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +24,7 @@ public class UserServiceImpl implements UserService {
         String email = request.getEmail();
         boolean exists = userRepository.existsByEmail(email);
         if(exists) {
-            throw new IllegalArgumentException("this user is already in db with email: " + email);
+            throw new UserAlreadyExistsException("this user is already in db with email: " + email);
         }
         User user = new User();
         user.setEmail(email);
@@ -38,7 +37,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(UserRequestDto request) {
         Optional<User> user = userRepository.getUserByEmail(request.getEmail());
         if(user.isEmpty()) {
-            throw new IllegalArgumentException("User can not be found for email: " + request.getEmail());
+            throw new ResourceNotFoundException("User can not be found for email: " + request.getEmail());
         }
         User updatedUser = user.get();
         updatedUser.setPhone(request.getPhone());
