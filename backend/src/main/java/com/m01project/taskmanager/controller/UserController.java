@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/users")
 @Validated
@@ -34,7 +36,8 @@ public class UserController {
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request) {
         User saved = userService.createUser(request);
         UserResponseDto response = getResponse(saved);
-        return ResponseEntity.ok(response);
+        URI location = URI.create("/api/users/" + saved.getEmail());
+        return ResponseEntity.created(location).body(response);
     }
 
     @PutMapping("/{email}")
