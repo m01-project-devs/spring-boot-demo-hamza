@@ -1,9 +1,9 @@
 package com.m01project.taskmanager.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.m01project.taskmanager.dto.UserRequestDto;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,7 +14,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,7 +33,7 @@ class UserControllerMvcTest {
     private UserService userService;
 
     @Test
-    void testGetUser_UserExists() throws Exception {
+    void getUser_WhenUserExists() throws Exception {
         User user = new User();
         user.setEmail("test@example.com");
         user.setPhone("1234567890");
@@ -46,7 +47,7 @@ class UserControllerMvcTest {
     }
 
     @Test
-    void testGetUser_UserNotFound() throws Exception {
+    void getUser_WhenUserDoesntExist_ReturnUserNotFound() throws Exception {
         when(userService.getUserByEmail("notfound@example.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/users/notfound@example.com"))
@@ -54,13 +55,13 @@ class UserControllerMvcTest {
     }
 
     @Test
-    void testCreateUser() throws Exception {
+    void createUser_WhenValidRequest_ShouldReturnCreatedUser() throws Exception {
         UserRequestDto request = new UserRequestDto();
         request.setEmail("new@example.com");
         request.setPhone("1112223333");
+        request.setPassword("11111111");
 
         User savedUser = new User();
-        savedUser.setId(1L);
         savedUser.setEmail("new@example.com");
         savedUser.setPhone("1112223333");
 
@@ -70,32 +71,65 @@ class UserControllerMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/users/1"))
-                .andExpect(jsonPath("$.email").value("new@example.com"));
+                .andExpect(header().string("Location", "/api/users/new@example.com"))
+                .andExpect(jsonPath("$.email").value("new@example.com"))
+                .andExpect(jsonPath("$.phone").value("1112223333"));
     }
 
     @Test
-    void testUpdateUser_UserExists() throws Exception {
+    void createUser_WhenEmailIsInvalid_ShouldReturnBadRequest400() throws Exception {
+        String json = """
+                {
+                    "email": "wrongemail",
+                    "password": "password1234",
+                    "phone": "+900000120"
+                }
+                """;
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+        .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createUser_WhenPasswordIsInvalid_ShouldReturnBadRequest() throws Exception {
+        String json = """
+                {
+                    "email": "user1@test.com",
+                    "password": "1234",
+                    "phone": "1111"
+                }
+                """;
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+        .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUser_WhenUserExists() throws Exception {
         UserRequestDto request = new UserRequestDto();
         request.setEmail("update@example.com");
-        request.setPhone("999888777");
+        request.setPassword("11111111");
+        request.setPhone("11111111");
 
         User existingUser = new User();
         existingUser.setEmail("update@example.com");
-        existingUser.setPhone("111222333");
+        existingUser.setPassword("22222222");
+        existingUser.setPhone("22222222");
 
-        when(userService.getUserByEmail("update@example.com")).thenReturn(Optional.of(existingUser));
-        when(userService.createUser(any(UserRequestDto.class))).thenReturn(existingUser);
+        when(userService.updateUser(any(UserRequestDto.class))).thenReturn(existingUser);
 
         mockMvc.perform(put("/api/users/update@example.com")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("update@example.com"));
+                .andExpect(jsonPath("$.email").value("update@example.com"))
+                .andExpect(jsonPath("$.phone").value("22222222"));
     }
 
     @Test
-    void testDeleteUser_UserExists() throws Exception {
+    void deleteUser_WhenUserExists() throws Exception {
         when(userService.deleteUser("delete@example.com")).thenReturn(true);
 
         mockMvc.perform(delete("/api/users/delete@example.com"))
@@ -103,7 +137,7 @@ class UserControllerMvcTest {
     }
 
     @Test
-    void testDeleteUser_UserNotFound() throws Exception {
+    void deleteUser_WhenUserDoesntExist_ShouldReturnUserNotFound() throws Exception {
         when(userService.deleteUser("notfound@example.com")).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/notfound@example.com"))
