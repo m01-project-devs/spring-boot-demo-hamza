@@ -1,6 +1,7 @@
 package com.m01project.taskmanager.service.impl;
 
-import com.m01project.taskmanager.dto.UserRequestDto;
+import com.m01project.taskmanager.dto.request.UserCreateRequestDto;
+import com.m01project.taskmanager.dto.request.UserUpdateRequestDto;
 import com.m01project.taskmanager.exception.ResourceNotFoundException;
 import com.m01project.taskmanager.exception.UserAlreadyExistsException;
 import com.m01project.taskmanager.model.User;
@@ -30,7 +31,7 @@ class UserServiceImplTest {
 
     @Test
     void createUser_WhenUserDoNotExist() {
-        UserRequestDto request = new UserRequestDto("user1@test.de", "1111", "user1");
+        UserCreateRequestDto request = new UserCreateRequestDto("user1@test.de", "1111", "user1");
 
         User savedUser = new User();
         savedUser.setId(1L);
@@ -50,7 +51,7 @@ class UserServiceImplTest {
 
     @Test
     void createUser_WhenEmailAlreadyExists_ShouldThrowException() {
-        UserRequestDto request = new UserRequestDto("user1@test.com", "1111", "");
+        UserCreateRequestDto request = new UserCreateRequestDto("user1@test.com", "1111", "");
         when(userRepository.existsByEmail("user1@test.com")).thenReturn(true);
         UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.createUser(request));
@@ -61,7 +62,8 @@ class UserServiceImplTest {
 
     @Test
     void updateUser_WhenUserExists() {
-        UserRequestDto request = new UserRequestDto("user1@test.de", "newPass", "22222222");
+        UserUpdateRequestDto request = new UserUpdateRequestDto("newPass", "22222222");
+        String email = "user1@test.de";
         User existingUser = new User();
         existingUser.setEmail("user1@test.de");
         existingUser.setPassword("oldPass");
@@ -70,7 +72,7 @@ class UserServiceImplTest {
         when(userRepository.getUserByEmail("user1@test.de")).thenReturn(Optional.of(existingUser));
         when(userRepository.save(existingUser)).thenReturn(existingUser);
 
-        User updatedUser = userService.updateUser(request);
+        User updatedUser = userService.updateUser(email, request);
         assertEquals("22222222", updatedUser.getPhone());
         assertEquals("newPass", updatedUser.getPassword());
         verify(userRepository).save(existingUser);
@@ -78,10 +80,11 @@ class UserServiceImplTest {
 
     @Test
     void updateUser_WhenUserDoNotExist_ShouldThrowException() {
-        UserRequestDto request = new UserRequestDto("user1@test.com", "11111111", "22222222");
+        String email = "user1@test.com";
+        UserUpdateRequestDto request = new UserUpdateRequestDto("11111111", "22222222");
         when(userRepository.getUserByEmail("user1@test.com")).thenReturn(Optional.empty());
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> userService.updateUser(request));
+                () -> userService.updateUser(email, request));
         assertEquals("User can not be found for email: user1@test.com",
                 exception.getMessage());
         verify(userRepository, never()).save(any());

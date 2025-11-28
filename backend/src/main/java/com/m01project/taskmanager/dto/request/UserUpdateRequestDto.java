@@ -1,6 +1,5 @@
-package com.m01project.taskmanager.dto;
+package com.m01project.taskmanager.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -9,17 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-public class UserRequestDto {
-    @NotNull(message = "email can not be null")
-    @Email(message = "Email format is invalid")
-    private String email;
+public class UserUpdateRequestDto {
 
-    @NotNull(message = "password can not be null")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @NotNull(message = "password can not be null.")
+    @Size(min = 8, max = 16)
     private String password;
 
     @Pattern(

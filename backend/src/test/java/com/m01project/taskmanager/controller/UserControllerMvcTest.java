@@ -1,7 +1,8 @@
 package com.m01project.taskmanager.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.m01project.taskmanager.dto.UserRequestDto;
+import com.m01project.taskmanager.dto.request.UserCreateRequestDto;
+import com.m01project.taskmanager.dto.request.UserUpdateRequestDto;
 import com.m01project.taskmanager.model.User;
 import com.m01project.taskmanager.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ class UserControllerMvcTest {
 
     @Test
     void createUser_WhenValidRequest_ShouldReturnCreatedUser() throws Exception {
-        UserRequestDto request = new UserRequestDto();
+        UserCreateRequestDto request = new UserCreateRequestDto();
         request.setEmail("new@example.com");
         request.setPhone("1112223333");
         request.setPassword("11111111");
@@ -65,7 +66,7 @@ class UserControllerMvcTest {
         savedUser.setEmail("new@example.com");
         savedUser.setPhone("1112223333");
 
-        when(userService.createUser(any(UserRequestDto.class))).thenReturn(savedUser);
+        when(userService.createUser(any(UserCreateRequestDto.class))).thenReturn(savedUser);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,8 +109,8 @@ class UserControllerMvcTest {
 
     @Test
     void updateUser_WhenUserExists() throws Exception {
-        UserRequestDto request = new UserRequestDto();
-        request.setEmail("update@example.com");
+        String email = "update@example.com";
+        UserCreateRequestDto request = new UserCreateRequestDto();
         request.setPassword("11111111");
         request.setPhone("11111111");
 
@@ -118,7 +119,7 @@ class UserControllerMvcTest {
         existingUser.setPassword("22222222");
         existingUser.setPhone("22222222");
 
-        when(userService.updateUser(any(UserRequestDto.class))).thenReturn(existingUser);
+        when(userService.updateUser(email, any(UserUpdateRequestDto.class))).thenReturn(existingUser);
 
         mockMvc.perform(put("/api/users/update@example.com")
                         .contentType(MediaType.APPLICATION_JSON)
